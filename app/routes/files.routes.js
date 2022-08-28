@@ -40,7 +40,7 @@ router.get("/query/:filename", async (req, res) => {
   } else {
     drive.files.list(
       {
-        q: `name = '${filename}'`,
+        q: `fullText contains '${filename}'`,
         fields: "files(id,name,parents)",
       },
       (err, response) => {
@@ -48,7 +48,7 @@ router.get("/query/:filename", async (req, res) => {
         // console.log(response.data);
         const { files } = response.data;
 
-        console.log(`name = '${filename}'`, files);
+        console.log(`name contains '${filename}'`, files);
         res.json(files);
       }
     );
