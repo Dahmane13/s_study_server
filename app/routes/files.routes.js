@@ -43,16 +43,46 @@ router.get("/query/:filename", async (req, res) => {
         q: `fullText contains '${filename}'`,
         fields: "files(id,name,parents)",
       },
-      (err, response) => {
+      async (err, response) => {
         if (err) throw err;
         // console.log(response.data);
         const { files } = response.data;
 
-        console.log(`name contains '${filename}'`, files);
-        res.json(files);
+        //  get parent folder name
+        // TODO: get the parent cfolder name then sendt to ui
+        await Promise.all(
+          files.map(async (file) => {
+            const { parents } = file;
+
+            return {
+              ...file,
+              parents: await getParentFolderName(parents[0]).then((parent) => {
+                // console.log(parent);
+                return parent;
+              }),
+            };
+          })
+        ).then((newFiles) => {
+          // console.log(newFiles);
+          res.json(newFiles);
+        });
       }
     );
   }
 });
+
+const getParentFolderName = (parentID) => {
+  return new Promise((resolve, reject) => {
+    // fetch parent data
+    drive.files.get(
+      { fileId: `${parentID}`, fields: "id,name" },
+      (err, response) => {
+        if (err) reject(err);
+        console.log(response.data);
+        resolve(response.data);
+      }
+    );
+  });
+};
 
 module.exports = router;
